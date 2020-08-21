@@ -20,8 +20,12 @@ defmodule ChatApiWeb.ConversationControllerTest do
 
   def fixture(:conversation) do
     account = fixture(:account)
-    attrs = Map.put(@create_attrs, :account_id, account.id)
-    {:ok, conversation} = Conversations.create_conversation(attrs)
+
+    {:ok, conversation} =
+      @create_attrs
+      |> Enum.into(%{account_id: account.id})
+      |> Conversations.create_conversation()
+
     conversation
   end
 
@@ -100,6 +104,62 @@ defmodule ChatApiWeb.ConversationControllerTest do
         )
 
       assert json_response(conn, 422)["errors"] != %{}
+    end
+
+    test "closing and reopening a conversation", %{
+      authed_conn: authed_conn,
+      conversation: %Conversation{id: id} = conversation
+    } do
+      conn = post(authed_conn, Routes.conversation_path(authed_conn, :close, conversation), %{})
+
+      assert %{"id" => ^id} = json_response(conn, 200)["data"]
+
+      conn = get(authed_conn, Routes.conversation_path(authed_conn, :show, id))
+
+      assert %{
+               "id" => id,
+               "status" => "closed"
+             } = json_response(conn, 200)["data"]
+
+      conn = post(authed_conn, Routes.conversation_path(authed_conn, :open, conversation), %{})
+
+      assert %{"id" => ^id} = json_response(conn, 200)["data"]
+
+      conn = get(authed_conn, Routes.conversation_path(authed_conn, :show, id))
+
+      assert %{
+               "id" => id,
+               "status" => "open"
+             } = json_response(conn, 200)["data"]
+    end
+
+    test "prioritizing and deprioritizing a conversation", %{
+      authed_conn: authed_conn,
+      conversation: %Conversation{id: id} = conversation
+    } do
+      conn =
+        post(authed_conn, Routes.conversation_path(authed_conn, :prioritize, conversation), %{})
+
+      assert %{"id" => ^id} = json_response(conn, 200)["data"]
+
+      conn = get(authed_conn, Routes.conversation_path(authed_conn, :show, id))
+
+      assert %{
+               "id" => id,
+               "priority" => "priority"
+             } = json_response(conn, 200)["data"]
+
+      conn =
+        post(authed_conn, Routes.conversation_path(authed_conn, :deprioritize, conversation), %{})
+
+      assert %{"id" => ^id} = json_response(conn, 200)["data"]
+
+      conn = get(authed_conn, Routes.conversation_path(authed_conn, :show, id))
+
+      assert %{
+               "id" => id,
+               "priority" => "not_priority"
+             } = json_response(conn, 200)["data"]
     end
   end
 

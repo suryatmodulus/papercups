@@ -51,6 +51,18 @@ defmodule ChatApiWeb.ConversationController do
     end
   end
 
+  def open(conn, %{"id" => id}),
+    do: update(conn, %{"id" => id, "conversation" => %{"status" => "open"}})
+
+  def close(conn, %{"id" => id}),
+    do: update(conn, %{"id" => id, "conversation" => %{"status" => "closed"}})
+
+  def prioritize(conn, %{"id" => id}),
+    do: update(conn, %{"id" => id, "conversation" => %{"priority" => "priority"}})
+
+  def deprioritize(conn, %{"id" => id}),
+    do: update(conn, %{"id" => id, "conversation" => %{"priority" => "not_priority"}})
+
   def delete(conn, %{"id" => id}) do
     conversation = Conversations.get_conversation!(id)
 

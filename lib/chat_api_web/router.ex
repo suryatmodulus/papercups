@@ -59,6 +59,11 @@ defmodule ChatApiWeb.Router do
     post("/payment_methods", PaymentMethodController, :create)
     get("/payment_methods", PaymentMethodController, :show)
 
+    post("/conversations/:id/close", ConversationController, :close)
+    post("/conversations/:id/open", ConversationController, :open)
+    post("/conversations/:id/prioritize", ConversationController, :prioritize)
+    post("/conversations/:id/deprioritize", ConversationController, :deprioritize)
+
     resources("/user_invitations", UserInvitationController, except: [:new, :edit])
     resources("/accounts", AccountController, only: [:update, :delete])
     resources("/messages", MessageController, except: [:new, :edit])
